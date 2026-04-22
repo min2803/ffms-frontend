@@ -17,6 +17,7 @@ export default function Header({
   notificationCount = 0,
   titleClassName = "",
   subtitleClassName = "",
+  children, // Slot cho các chức năng mở rộng của từng trang
 }) {
   const {
     notifications,
@@ -56,26 +57,35 @@ export default function Header({
           </p>
         )}
       </div>
-      <div className="relative" ref={containerRef}>
-        <button
-          type="button"
-          onClick={() => setDropdownOpen((prev) => !prev)}
-          className="relative grid h-10 w-10 place-content-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-subtle)]"
-        >
-          <Bell size={18} />
-          {count > 0 && (
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--color-state-error)] ring-2 ring-[var(--color-bg-surface)]" />
-          )}
-        </button>
+      <div className="flex items-center gap-3">
+        {/* Render các nút chức năng riêng biệt của từng trang nếu có */}
+        {children && (
+          <div className="hidden items-center gap-2 tablet:flex">
+            {children}
+          </div>
+        )}
 
-        {dropdownOpen ? (
-          <NotificationDropdown
-            notifications={notifications}
-            onMarkAllRead={markAllAsRead}
-            onItemClick={markAsRead}
-            onViewAll={() => setDropdownOpen(false)}
-          />
-        ) : null}
+        <div className="relative" ref={containerRef}>
+          <button
+            type="button"
+            onClick={() => setDropdownOpen((prev) => !prev)}
+            className="relative grid h-10 w-10 place-content-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-subtle)]"
+          >
+            <Bell size={18} />
+            {count > 0 && (
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--color-state-error)] ring-2 ring-[var(--color-bg-surface)]" />
+            )}
+          </button>
+
+          {dropdownOpen ? (
+            <NotificationDropdown
+              notifications={notifications}
+              onMarkAllRead={markAllAsRead}
+              onItemClick={markAsRead}
+              onViewAll={() => setDropdownOpen(false)}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );

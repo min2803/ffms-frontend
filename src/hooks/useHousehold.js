@@ -13,18 +13,18 @@ export default function useHousehold(idOrName) {
 
   // ── Lấy thông tin hộ gia đình ──────────────────────────────────────
   const fetchHousehold = useCallback(async () => {
-    if (!idOrName) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await householdService.getMyHousehold(idOrName);
+      // Nếu không truyền ID, mặc định lấy "me" (bootstrap tự động)
+      const data = await householdService.getMyHousehold();
       setHousehold(data);
     } catch (err) {
       setError(err?.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
-  }, [idOrName]);
+  }, []);
 
   useEffect(() => {
     fetchHousehold();

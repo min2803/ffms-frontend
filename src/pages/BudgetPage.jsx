@@ -8,7 +8,8 @@ import useBudget from "../hooks/useBudget";
 export default function BudgetPage() {
   const [sidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { budget, loading, error } = useBudget();
+  const currentMonth = new Date().getMonth() + 1;
+  const { budget, loading, error, setBudget, refetch } = useBudget(currentMonth);
 
   const navItems = getNavigationItems("budget");
 

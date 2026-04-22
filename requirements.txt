@@ -3,3 +3,4 @@ npm install react-router-dom
 npm install lucide-react
 npm install swiper
 npm install axios
+npm install clsx tailwind-merge

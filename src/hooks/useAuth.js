@@ -17,7 +17,8 @@ export default function useAuth() {
     setError(null);
     try {
       const response = await authService.login(data);
-      setUser(response?.user || response);
+      const userData = response?.data?.user || response?.user || response;
+      setUser(userData);
       return response;
     } catch (err) {
       const message = err?.response?.data?.message || err.message;
@@ -50,7 +51,7 @@ export default function useAuth() {
     setError(null);
     try {
       const response = await authService.getMe();
-      setUser(response?.user || response);
+      setUser(response?.data?.user || response?.data || response?.user || response);
       return response;
     } catch (err) {
       const message = err?.response?.data?.message || err.message;

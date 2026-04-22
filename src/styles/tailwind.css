@@ -65,6 +65,18 @@
   /* ── Font Families ── */
   --font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
+  /* ── Typography Scale (Chuẩn hóa cỡ chữ hệ thống) ── */
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
+  --font-size-3xl: 1.875rem;   /* 30px */
+  --font-size-4xl: 2.25rem;    /* 36px */
+  --font-size-5xl: 3rem;       /* 48px */
+  --font-size-6xl: 3.75rem;    /* 60px */
+
   /* ── Shadows ── */
   --shadow-button-sm:
     0 10px 15px -3px rgb(0 98 157 / 0.2),
@@ -82,6 +94,12 @@
   --blur-glow-lg: 50px;
   --blur-glow-xl: 60px;
 
+  /* ── Responsive Breakpoints (Thiết lập kích thước màn hình theo yêu cầu) ── */
+  --breakpoint-mobile: 480px;    /* Mobile nhỏ xs */
+  --breakpoint-tablet: 768px;    /* md: Máy tính bảng */
+  --breakpoint-desktop: 1024px;  /* lg: Desktop thường */
+  --breakpoint-widescreen: 1440px; /* xl: Màn hình lớn */
+
   /* ── Border Radius ── */
   --radius-xs: 8px;
   --radius-sm: 12px;
@@ -89,4 +107,20 @@
   --radius-lg: 24px;
   --radius-xl: 32px;
   --radius-pill: 9999px;
+}
+
+/* ── Globals & Utilities ── */
+@layer base {
+  /* Tối ưu thanh trượt (Scrollbar) cho tất cả màn hình */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-default);
+    border-radius: var(--radius-pill);
+  }
 }

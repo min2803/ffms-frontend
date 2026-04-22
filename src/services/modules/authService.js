@@ -18,14 +18,16 @@ const authService = {
   async login(data) {
     const response = await axiosClient.post(`${ENDPOINT}/login`, data);
 
-    // Lưu token từ phản hồi (tuỳ chỉnh key theo API backend)
-    const token = response?.accessToken || response?.token;
+    // Backend trả về: { success, message, data: { user, accessToken, refreshToken } }
+    // Axios interceptor trả response.data (outer) → tokens nằm trong response.data
+    const result = response?.data || response;
+    const token = result?.accessToken || result?.token;
     if (token) {
       localStorage.setItem("accessToken", token);
     }
 
     // Lưu refresh token nếu có
-    const refresh = response?.refreshToken;
+    const refresh = result?.refreshToken;
     if (refresh) {
       localStorage.setItem("refreshToken", refresh);
     }
@@ -65,14 +67,16 @@ const authService = {
       refreshToken,
     });
 
+    const result = response?.data || response;
+
     // Lưu access token mới
-    const newToken = response?.accessToken || response?.token;
+    const newToken = result?.accessToken || result?.token;
     if (newToken) {
       localStorage.setItem("accessToken", newToken);
     }
 
     // Lưu refresh token mới nếu server xoay vòng token
-    const newRefresh = response?.refreshToken;
+    const newRefresh = result?.refreshToken;
     if (newRefresh) {
       localStorage.setItem("refreshToken", newRefresh);
     }

@@ -25,10 +25,23 @@ import useDashboard from "../hooks/useDashboard";
 
 /* ── Page Component ── */
 
+const iconMap = {
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  Lightbulb
+};
+
 function DashboardPage() {
   const [sidebarCollapsed] = useState(false);
   const [flowView, setFlowView] = useState("income");
   const { summary, loading, error } = useDashboard({ quarter: getCurrentQuarterLabel() });
+
+  // Map icon strings to components for KPI cards
+  const preparedKpiCards = summary?.kpiCards?.map(card => ({
+    ...card,
+    icon: iconMap[card.iconName] || Lightbulb
+  })) || [];
   
   const navItems = getNavigationItems("dashboard");
   const quarterLabel = getCurrentQuarterLabel();
@@ -61,6 +74,11 @@ function DashboardPage() {
            <div className="py-10 text-center font-medium text-red-500">
              Error: {error}
            </div>
+        ) : summary?.message ? (
+           <div className="py-20 text-center space-y-4">
+              <div className="text-xl font-semibold text-[var(--color-text-primary)]">{summary.message}</div>
+              <p className="text-[var(--color-text-secondary)]">Bắt đầu bằng cách thêm giao dịch đầu tiên của bạn hoặc thiết lập ngân sách.</p>
+           </div>
         ) : (
           <>
             {summary?.budgetWarning && (
@@ -71,10 +89,11 @@ function DashboardPage() {
               />
             )}
 
-            <KpiCards cards={summary?.kpiCards || []} />
+            <KpiCards cards={preparedKpiCards} />
 
-            <section className="grid grid-cols-12 gap-5">
-              <div className="col-span-8">
+            {/* Grid 12 cột tự động trải rộng theo breakpoints custom */}
+            <section className="grid grid-cols-1 desktop:grid-cols-12 gap-5">
+              <div className="desktop:col-span-8">
                 <FinancialChart
                   activeView={flowView}
                   onViewChange={setFlowView}
@@ -86,12 +105,12 @@ function DashboardPage() {
                   labels={summary?.months || []}
                 />
               </div>
-              <div className="col-span-4">
+              <div className="desktop:col-span-4">
                 <AiInsights insights={summary?.aiInsights || []} />
               </div>
             </section>
 
-            <section className="grid grid-cols-2 gap-5">
+            <section className="grid grid-cols-1 tablet:grid-cols-2 gap-5">
               <RecentActivity activities={summary?.activities || []} />
               <AssetAllocation data={summary?.assetAllocation || []} />
             </section>

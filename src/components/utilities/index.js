@@ -1,4 +1,4 @@
-export { default as UtilitiesHeaderBar } from "./UtilitiesHeaderBar";
+
 export { default as UtilityStatCard } from "./UtilityStatCard";
 export { default as UtilityRecommendationCard } from "./UtilityRecommendationCard";
 export { default as ConsumptionHistoryCard } from "./ConsumptionHistoryCard";

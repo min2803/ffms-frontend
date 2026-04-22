@@ -13,7 +13,8 @@ export default function HouseholdPage() {
   
   // Here we would typically pass a household ID or use user context to get it. 
   // For now using empty call to trigger fetchMyHousehold (if it was implemented)
-  const { household, loading, error, removeMember } = useHousehold("current");
+  // Tự động lấy household "me" và bootstrap nếu cần
+  const { household, loading, error, removeMember } = useHousehold();
 
   return (
     <UserLayout

@@ -14,11 +14,11 @@ const householdService = {
   },
 
   /**
-   * GET /households/me/:idOrName
-   * Lấy thông tin hộ gia đình của người dùng hiện tại theo ID hoặc tên.
+   * GET /households/me
+   * Lấy thông tin hộ gia đình của người dùng hiện tại (Tự động bootstrap).
    */
-  getMyHousehold(idOrName) {
-    return axiosClient.get(`${ENDPOINT}/me/${idOrName}`);
+  getMyHousehold() {
+    return axiosClient.get(`${ENDPOINT}/me`);
   },
 
   /**
