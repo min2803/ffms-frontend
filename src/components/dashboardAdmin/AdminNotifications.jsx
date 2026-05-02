@@ -27,7 +27,6 @@ function NotificationItem({ item }) {
         <Icon size={18} />
       </div>
 
-      {/* Text */}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-text-primary">{item.title}</p>
         <p className="mt-0.5 text-xs text-text-muted leading-relaxed">
@@ -35,7 +34,6 @@ function NotificationItem({ item }) {
         </p>
       </div>
 
-      {/* Time + unread dot */}
       <div className="flex shrink-0 flex-col items-end gap-1.5 pt-0.5">
         <span className="text-[11px] font-medium text-text-soft">
           {item.time}
@@ -64,23 +62,21 @@ export default function AdminNotifications({ notifications }) {
         </h3>
         <button
           type="button"
-          className="text-xs font-semibold text-primary hover:text-primary-dark transition"
+          className="text-xs font-semibold text-primary hover:opacity-80 transition"
         >
           Mark all as read
         </button>
       </div>
 
-      {/* Items */}
       <div className="divide-y divide-border-default">
-        {notifications.map((item) => (
-          <NotificationItem key={item.id} item={item} />
+        {notifications.map((item, idx) => (
+          <NotificationItem key={item.id ?? idx} item={item} />
         ))}
       </div>
 
-      {/* Footer */}
       <button
         type="button"
-        className="mt-4 flex w-full items-center justify-center rounded-radius-sm border border-border-default bg-bg-subtle py-2.5 text-xs font-bold uppercase tracking-wider text-text-secondary transition hover:bg-bg-tint-soft"
+        className="mt-4 flex w-full items-center justify-center rounded-sm border border-border-default bg-bg-subtle py-2.5 text-xs font-bold uppercase tracking-wider text-text-secondary transition hover:bg-bg-tint-soft"
       >
         View All Notifications
       </button>

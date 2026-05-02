@@ -48,6 +48,36 @@ const userService = {
   deleteUser(id) {
     return axiosClient.delete(`${ENDPOINT}/${id}`);
   },
+
+  /**
+   * PUT /users/me/password
+   * Đổi mật khẩu của người dùng đang đăng nhập.
+   */
+  changePassword(data) {
+    return axiosClient.put(`${ENDPOINT}/me/password`, data);
+  },
+
+  /**
+   * GET /users/search?q=keyword
+   * Tìm user theo name/email để invite vào household.
+   */
+  searchUsers(q) {
+    return axiosClient.get(`${ENDPOINT}/search`, { params: { q } });
+  },
+
+  // ── Admin endpoints ─────────────────────────────────────────────────
+
+  getAdminUsers(params = {}) {
+    return axiosClient.get("/admin/users", { params });
+  },
+
+  adminDeleteUser(id) {
+    return axiosClient.delete(`/admin/users/${id}`);
+  },
+
+  adminUpdateRole(id, role_id) {
+    return axiosClient.put(`/admin/users/${id}/role`, { role_id });
+  },
 };
 
 export default userService;

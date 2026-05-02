@@ -1,12 +1,48 @@
 import { useState, useRef, useEffect } from "react";
-import { X, ChevronDown, Calendar } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useAppContext } from "../../contexts/AppContext";
 import PrimaryButton from "../shared/PrimaryButton";
+import categoryService from "../../services/modules/categoryService";
+import DatePicker from "../ui/DatePicker";
 
-export default function AddExpenseModal({ isOpen, onClose }) {
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+/**
+ * Expense Modal – supports both Create and Update.
+ *
+ * @param {boolean}  isOpen       – controls visibility
+ * @param {Function} onClose      – called to close the modal
+ * @param {Function} onSubmit     – (payload) => Promise  — create or update
+ * @param {Object|null} initialData – null = create mode, object = edit mode
+ *   initialData shape: { id, amount, category_id, expense_date, description }
+ */
+export default function AddExpenseModal({ isOpen, onClose, onSubmit, initialData = null }) {
+  const { t } = useTranslation();
+  const { currency } = useAppContext();
+  const [amount, setAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split("T")[0]);
+  const [description, setDescription] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const categoryRef = useRef(null);
 
+  const isEditMode = Boolean(initialData);
+
+  // Fetch categories when modal opens (cache in state)
+  useEffect(() => {
+    if (!isOpen) return;
+    categoryService
+      .getCategories()
+      .then((res) => {
+        const list = Array.isArray(res) ? res : res?.data ?? [];
+        setCategories(list.filter((c) => c.type?.toLowerCase() === "expense"));
+      })
+      .catch(() => setCategories([]));
+  }, [isOpen]);
+
+  // Click outside to close category dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (categoryRef.current && !categoryRef.current.contains(event.target)) {
@@ -17,123 +53,192 @@ export default function AddExpenseModal({ isOpen, onClose }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Reset / populate form when modal opens or initialData changes
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (initialData) {
+      setAmount(String(initialData.amount ?? ""));
+      setSelectedCategory(String(initialData.category_id ?? initialData.categoryId ?? ""));
+      const rawDate = initialData.expense_date || initialData.expenseDate || "";
+      setExpenseDate(rawDate ? new Date(rawDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]);
+      setDescription(initialData.description ?? "");
+    } else {
+      setAmount("");
+      setSelectedCategory("");
+      setExpenseDate(new Date().toISOString().split("T")[0]);
+      setDescription("");
+    }
+    setError("");
+    setSubmitting(false);
+    setIsCategoryOpen(false);
+  }, [isOpen, initialData]);
+
+  const validate = () => {
+    const numAmount = parseFloat(amount);
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      setError(t("expenseModal.validAmountError"));
+      return false;
+    }
+    if (!selectedCategory) {
+      setError(t("expenseModal.selectCategoryError"));
+      return false;
+    }
+    // Check category exists in list
+    const catExists = categories.some(c => String(c.id) === String(selectedCategory));
+    if (!catExists) {
+      setError(t("expenseModal.selectCategoryError"));
+      return false;
+    }
+    if (!expenseDate) {
+      setError(t("expenseModal.selectDateError"));
+      return false;
+    }
+    // Check date is valid
+    const parsedDate = new Date(expenseDate);
+    if (isNaN(parsedDate.getTime())) {
+      setError(t("expenseModal.selectDateError"));
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    setError("");
+    setSubmitting(true);
+
+    try {
+      await onSubmit({
+        categoryId: parseInt(selectedCategory),
+        amount: parseFloat(amount),
+        description: description.trim() || null,
+        expenseDate,
+      });
+      onClose();
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || t("expenseModal.saveFailed"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (!isOpen) return null;
 
-  const categories = [
-    { value: "housing", label: "Housing & Rent" },
-    { value: "groceries", label: "Groceries" },
-    { value: "transport", label: "Transport" },
-    { value: "utilities", label: "Utilities" },
-  ];
+  const currencySymbol = currency === "VND" ? "₫" : "$";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111c2d]/50 backdrop-blur-sm p-4">
       <div
-        className="w-full max-w-md rounded-[var(--radius-lg)] bg-white shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-md rounded-lg bg-white shadow-2xl overflow-hidden flex flex-col"
         style={{ animation: "fadeIn 0.2s ease-out" }}
       >
-        {/* Header (Blue Background) */}
-        <div className="flex items-center justify-between bg-[var(--color-primary)] px-6 py-4 text-white">
-          <h2 className="text-base font-semibold">New Expense</h2>
-          <button
-            onClick={onClose}
-            className="rounded-full p-1 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-          >
+        {/* Header */}
+        <div className="flex items-center justify-between bg-primary px-6 py-4 text-white">
+          <h2 className="text-base font-semibold">
+            {isEditMode ? t("expenseModal.editTitle") : t("expenseModal.title")}
+          </h2>
+          <button onClick={onClose} disabled={submitting} className="rounded-full p-1 text-white/80 transition-colors hover:bg-white/10 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Form Fields */}
         <div className="p-6 space-y-5">
-          {/* Transaction Amount */}
+          {/* Error banner */}
+          {error && (
+            <div className="rounded-sm bg-red-50 border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* Amount */}
           <div>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Transaction Amount</label>
-            <div className="flex items-center rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20">
-              <span className="mr-2 text-sm font-bold text-[var(--color-text-primary)]">$</span>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-text-secondary">{t("expenseModal.transactionAmount")}</label>
+            <div className="flex items-center rounded-sm bg-bg-subtle px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-primary/20">
+              <span className="mr-2 text-sm font-bold text-text-primary">{currencySymbol}</span>
               <input
-                type="text"
-                className="w-full bg-transparent text-sm font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none"
-                placeholder="0.00"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full bg-transparent text-sm font-medium text-text-primary placeholder-text-muted focus:outline-none"
+                placeholder="0"
+                min="0"
+                step="1000"
               />
             </div>
           </div>
 
-          {/* Expense Category */}
+          {/* Category dropdown */}
           <div className="relative" ref={categoryRef}>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
-              Expense Category
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-text-secondary">
+              {t("expenseModal.expenseCategory")}
             </label>
-            <div 
+            <div
               onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-              className="flex cursor-pointer select-none items-center justify-between rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] px-3.5 py-3 transition-colors hover:bg-[#e6edfa]"
+              className="flex cursor-pointer select-none items-center justify-between rounded-sm bg-bg-subtle px-3.5 py-3 transition-colors hover:bg-[#e6edfa]"
             >
-              <span className={`text-sm font-medium ${selectedCategory ? "text-[var(--color-text-primary)]" : "text-[var(--color-text-muted)]"}`}>
-                {selectedCategory ? categories.find(c => c.value === selectedCategory)?.label : "Select a category"}
+              <span className={`text-sm font-medium ${selectedCategory ? "text-text-primary" : "text-text-muted"}`}>
+                {selectedCategory ? categories.find(c => String(c.id) === String(selectedCategory))?.name : t("expenseModal.selectCategory")}
               </span>
-              <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform duration-200 ${isCategoryOpen ? "rotate-180" : ""}`} />
+              <ChevronDown className={`h-4 w-4 text-text-muted transition-transform duration-200 ${isCategoryOpen ? "rotate-180" : ""}`} />
             </div>
 
-            {/* Custom Dropdown Menu */}
             {isCategoryOpen && (
-              <div className="absolute top-[100%] left-0 right-0 z-10 mt-2 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border-default)] bg-white shadow-lg animate-in fade-in slide-in-from-top-2">
+              <div className="absolute top-[100%] left-0 right-0 z-10 mt-2 overflow-hidden rounded-sm border border-border-default bg-white shadow-lg animate-in fade-in slide-in-from-top-2">
                 <div className="max-h-60 overflow-y-auto py-1">
-                  {categories.map((cat) => (
-                    <div
-                      key={cat.value}
-                      onClick={() => {
-                        setSelectedCategory(cat.value);
-                        setIsCategoryOpen(false);
-                      }}
-                      className={`cursor-pointer px-4 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--color-bg-subtle)] ${
-                        selectedCategory === cat.value
-                          ? "bg-[#f0f4ff] text-[var(--color-primary)]"
-                          : "text-[var(--color-text-primary)]"
-                      }`}
-                    >
-                      {cat.label}
-                    </div>
-                  ))}
+                  {categories.length === 0 ? (
+                    <div className="px-4 py-2.5 text-sm text-text-muted">{t("expenseModal.noCategories")}</div>
+                  ) : (
+                    categories.map((cat) => (
+                      <div
+                        key={cat.id}
+                        onClick={() => { setSelectedCategory(String(cat.id)); setIsCategoryOpen(false); }}
+                        className={`cursor-pointer px-4 py-2.5 text-sm font-medium transition-colors hover:bg-bg-subtle ${
+                          String(selectedCategory) === String(cat.id) ? "bg-[#f0f4ff] text-primary" : "text-text-primary"
+                        }`}
+                      >
+                        {cat.name}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Transaction Date */}
+          {/* Date */}
           <div>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Transaction Date</label>
-            <div className="flex items-center justify-between rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20">
-              <input
-                type="text"
-                className="w-full bg-transparent text-sm font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none"
-                placeholder="mm/dd/yyyy"
-              />
-              <Calendar className="h-4 w-4 text-[var(--color-text-muted)] shrink-0" />
-            </div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-text-secondary">{t("expenseModal.transactionDate")}</label>
+            <DatePicker value={expenseDate} onChange={setExpenseDate} />
           </div>
 
-          {/* Optional Note */}
+          {/* Description */}
           <div>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Optional Note</label>
-            <div className="flex rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-text-secondary">{t("expenseModal.optionalNote")}</label>
+            <div className="flex rounded-sm bg-bg-subtle px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-primary/20">
               <textarea
-                className="w-full bg-transparent text-sm font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none resize-none"
-                placeholder="What was this for?"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full bg-transparent text-sm font-medium text-text-primary placeholder-text-muted focus:outline-none resize-none"
+                placeholder={t("expenseModal.notePlaceholder")}
                 rows="2"
               ></textarea>
             </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-2">
-          <button
-            onClick={onClose}
-            className="rounded-[var(--radius-sm)] px-4 py-2 text-sm font-bold text-[var(--color-text-primary)] transition hover:bg-gray-100"
-          >
-            Cancel
+          <button onClick={onClose} disabled={submitting} className="rounded-sm px-4 py-2 text-sm font-bold text-text-primary transition hover:bg-gray-100">
+            {t("expenseModal.cancel")}
           </button>
-          <PrimaryButton onClick={onClose} className="px-6">
-            Save Expense
+          <PrimaryButton onClick={handleSubmit} disabled={submitting} className="px-6">
+            {submitting
+              ? t("expenseModal.saving")
+              : isEditMode
+                ? t("expenseModal.updateExpense")
+                : t("expenseModal.saveExpense")}
           </PrimaryButton>
         </div>
 

@@ -13,14 +13,14 @@ export default function HouseholdInfo({
       <SectionContainer
         title={
           <span className="inline-flex items-center gap-2">
-            <Info size={20} className="text-[var(--color-primary)]" />
+            <Info size={20} className="text-primary" />
             Household Info
           </span>
         }
         action={
           <button
             onClick={onEdit}
-            className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-2 py-1 text-xs font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-bg-subtle)]"
+            className="flex items-center gap-1.5 rounded-xs px-2 py-1 text-xs font-semibold text-primary transition hover:bg-bg-subtle"
           >
             <PencilLine size={14} />
             Edit
@@ -31,43 +31,43 @@ export default function HouseholdInfo({
       />
 
       <div className="mb-6">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-text-muted)]">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-text-muted">
           Household Name
         </p>
-        <p className="text-2xl font-bold text-[var(--color-text-primary)]">{name}</p>
+        <p className="text-2xl font-bold text-text-primary">{name}</p>
       </div>
 
       <div className="mb-8 flex-1">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-text-muted)]">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-text-muted">
           Description
         </p>
-        <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+        <p className="text-sm leading-relaxed text-text-secondary">
           {description}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] p-4">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-text-muted)]">
+        <div className="rounded-sm bg-bg-subtle p-4">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[1px] text-text-muted">
             Created On
           </p>
-          <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+          <p className="text-sm font-semibold text-text-primary">
             {createdOn}
           </p>
         </div>
-        <div className="rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] p-4">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-text-muted)]">
+        <div className="rounded-sm bg-bg-subtle p-4">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[1px] text-text-muted">
             Status
           </p>
           <div className="flex items-center gap-2">
             <span
               className={`h-2 w-2 rounded-full ${
-                status === "Active"
-                  ? "bg-[var(--color-state-success)]"
-                  : "bg-[var(--color-state-error)]"
+                status?.toUpperCase() === "ACTIVE"
+                  ? "bg-state-success"
+                  : "bg-state-error"
               }`}
             />
-            <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+            <p className="text-sm font-semibold text-text-primary">
               {status}
             </p>
           </div>

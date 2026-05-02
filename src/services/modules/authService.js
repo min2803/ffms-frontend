@@ -18,16 +18,15 @@ const authService = {
   async login(data) {
     const response = await axiosClient.post(`${ENDPOINT}/login`, data);
 
-    // Backend trả về: { success, message, data: { user, accessToken, refreshToken } }
-    // Axios interceptor trả response.data (outer) → tokens nằm trong response.data
-    const result = response?.data || response;
-    const token = result?.accessToken || result?.token;
+    // Interceptor unwrap axios response.data → response = { success, message, data: { user, accessToken, refreshToken } }
+    // Token nằm trong response.data (inner payload)
+    const inner = response?.data ?? response;
+    const token = inner?.accessToken || inner?.token;
     if (token) {
       localStorage.setItem("accessToken", token);
     }
 
-    // Lưu refresh token nếu có
-    const refresh = result?.refreshToken;
+    const refresh = inner?.refreshToken;
     if (refresh) {
       localStorage.setItem("refreshToken", refresh);
     }
@@ -36,12 +35,11 @@ const authService = {
   },
 
   /**
-   * GET /auth/me
+   * GET /users/profile
    * Lấy thông tin người dùng hiện tại đang đăng nhập.
-   * Token được tự động đính kèm qua interceptor của axiosClient.
    */
   getMe() {
-    return axiosClient.get(`${ENDPOINT}/me`);
+    return axiosClient.get("/users/profile");
   },
 
   /**
@@ -55,7 +53,16 @@ const authService = {
       // Luôn xoá token dù request thất bại
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userRole"); // Xóa role để tránh redirect sai sau logout
     }
+  },
+
+  forgotPassword(email) {
+    return axiosClient.post(`${ENDPOINT}/forgot-password`, { email });
+  },
+
+  resetPassword(token, newPassword) {
+    return axiosClient.post(`${ENDPOINT}/reset-password`, { token, newPassword });
   },
 
   /**

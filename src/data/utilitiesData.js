@@ -5,7 +5,7 @@ export const utilityTopStats = [
   {
     id: "usage",
     icon: Gauge,
-    iconTone: "bg-[var(--color-bg-utility-icon-primary)] text-[var(--color-primary)]",
+    iconTone: "bg-bg-utility-icon-primary text-primary",
     title: "Monthly Usage",
     value: "412.5",
     unit: "kWh",
@@ -15,7 +15,7 @@ export const utilityTopStats = [
   {
     id: "cost",
     icon: Wallet,
-    iconTone: "bg-[var(--color-bg-utility-icon-accent)] text-[var(--color-role-member-text)]",
+    iconTone: "bg-bg-utility-icon-accent text-role-member-text",
     title: "Estimated Cost",
     value: "$128.40",
     unit: "",

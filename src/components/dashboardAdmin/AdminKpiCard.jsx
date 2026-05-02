@@ -17,25 +17,22 @@ export default function AdminKpiCard({
 }) {
   return (
     <article
-      className={`flex flex-col items-center gap-2 rounded-radius-md border px-5 py-5 text-center shadow-soft transition-shadow hover:shadow-card ${
+      className={`flex flex-col items-center gap-2 rounded-md border px-5 py-5 text-center shadow-soft transition-shadow hover:shadow-card ${
         highlighted
           ? "border-border-default bg-bg-subtle"
           : "border-border-default bg-bg-surface"
       }`}
     >
-      {/* Icon */}
       <div
-        className={`grid h-10 w-10 place-content-center rounded-radius-sm ${iconBg}`}
+        className={`grid h-10 w-10 place-content-center rounded-sm ${iconBg}`}
       >
         <Icon size={20} />
       </div>
 
-      {/* Label */}
       <p className="text-[10px] font-bold uppercase tracking-[1.2px] text-text-muted">
         {label}
       </p>
 
-      {/* Value */}
       <p className="text-2xl font-extrabold tracking-tight text-text-primary lg:text-3xl">
         {value}
       </p>

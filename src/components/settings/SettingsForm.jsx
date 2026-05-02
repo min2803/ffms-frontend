@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Shield, Lock, ChevronRight } from "lucide-react";
-import { personalInfoData as defaultPersonalInfo, genderOptions as defaultGenderOptions } from "../../data/settingsData";
+import { useTranslation } from "react-i18next";
+import { genderOptions as defaultGenderOptions } from "../../data/settingsData";
 import { SectionCard } from "../shared";
 import PrimaryButton from "../shared/PrimaryButton";
 import ChangePasswordModal from "./ChangePasswordModal";
@@ -8,23 +9,28 @@ import SettingsSectionHeading from "./SettingsSectionHeading";
 import { SettingsTextField, SettingsSelectField } from "./SettingsFormFields";
 
 export default function SettingsForm({ initialData, genderOptions = defaultGenderOptions, onSave }) {
+  const { t } = useTranslation();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const personalInfoData = initialData || defaultPersonalInfo;
-  const [form, setForm] = useState({ ...personalInfoData });
+  const [form, setForm] = useState({ fullName: "", phone: "", dob: "", gender: "" });
   const [errors, setErrors] = useState({});
-  const [saveMessage, setSaveMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Sync form with initialData when it changes (e.g. after getMe refreshes)
+  useEffect(() => {
+    if (initialData) {
+      setForm({ ...initialData });
+    }
+  }, [initialData?.fullName, initialData?.phone, initialData?.dob, initialData?.gender]);
 
   const handleChange = (field) => (e) => {
     const value = e.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
-    setSaveMessage("");
   };
 
   const handleDiscard = () => {
-    setForm({ ...personalInfoData });
+    if (initialData) setForm({ ...initialData });
     setErrors({});
-    setSaveMessage("");
   };
 
   const validatePhone = (phone) => {
@@ -51,16 +57,16 @@ export default function SettingsForm({ initialData, genderOptions = defaultGende
   const validatePersonalInfo = () => {
     const nextErrors = {};
 
-    if (!form.gender || form.gender === "prefer_not") {
-      nextErrors.gender = "Please select a valid gender.";
+    if (!form.fullName || form.fullName.trim().length === 0) {
+      nextErrors.fullName = t("settings.errorFullName", "Họ tên không được để trống.");
     }
 
-    if (!validatePhone(form.phone)) {
-      nextErrors.phone = "Please enter a valid phone number.";
+    if (form.phone && !validatePhone(form.phone)) {
+      nextErrors.phone = t("settings.errorPhone", "Số điện thoại không hợp lệ.");
     }
 
-    if (!validateDob(form.dob)) {
-      nextErrors.dob = "Please enter a valid date of birth (MM/DD/YYYY).";
+    if (form.dob && !validateDob(form.dob)) {
+      nextErrors.dob = t("settings.errorDob", "Ngày sinh không hợp lệ (MM/DD/YYYY).");
     }
 
     setErrors(nextErrors);
@@ -69,37 +75,48 @@ export default function SettingsForm({ initialData, genderOptions = defaultGende
 
   const handleSaveChanges = async () => {
     if (!validatePersonalInfo()) return;
+    setSaving(true);
     try {
       if (onSave) {
         await onSave(form);
       }
-      setSaveMessage("Saved");
-    } catch (err) {
-      setSaveMessage("Error saving changes");
+    } catch {
+      // Toast is handled by parent
+    } finally {
+      setSaving(false);
     }
   };
+
+  // Localized gender options
+  const localizedGenderOptions = [
+    { value: "", label: t("settings.selectGender", "-- Chọn --") },
+    { value: "male", label: t("settings.male") },
+    { value: "female", label: t("settings.female") },
+    { value: "other", label: t("settings.other") },
+  ];
 
   return (
     <div className="space-y-8">
       <section>
-        <SettingsSectionHeading icon={User} title="Personal Information" />
-        <div className="rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] p-6 sm:p-8">
+        <SettingsSectionHeading icon={User} title={t("settings.personalInfo")} />
+        <div className="rounded-sm bg-bg-subtle p-6 sm:p-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <SettingsTextField
               id="settings-full-name"
-              label="Full name"
-              value={form.fullName}
+              label={t("settings.fullName")}
+              value={form.fullName || ""}
               onChange={handleChange("fullName")}
               autoComplete="name"
+              error={errors.fullName}
             />
             <SettingsSelectField
               id="settings-gender"
-              label="Gender"
+              label={t("settings.gender")}
               value={form.gender}
               onChange={handleChange("gender")}
               error={errors.gender}
             >
-              {genderOptions.map((opt) => (
+              {localizedGenderOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -107,7 +124,7 @@ export default function SettingsForm({ initialData, genderOptions = defaultGende
             </SettingsSelectField>
             <SettingsTextField
               id="settings-phone"
-              label="Phone number"
+              label={t("settings.phone")}
               value={form.phone}
               onChange={handleChange("phone")}
               autoComplete="tel"
@@ -115,7 +132,7 @@ export default function SettingsForm({ initialData, genderOptions = defaultGende
             />
             <SettingsTextField
               id="settings-dob"
-              label="Date of birth"
+              label={t("settings.dateOfBirth")}
               value={form.dob}
               onChange={handleChange("dob")}
               placeholder="MM/DD/YYYY"
@@ -127,46 +144,44 @@ export default function SettingsForm({ initialData, genderOptions = defaultGende
       </section>
 
       <section>
-        <SettingsSectionHeading icon={Shield} title="Account Security" />
-        <SectionCard className="overflow-hidden shadow-[var(--shadow-soft)]">
+        <SettingsSectionHeading icon={Shield} title={t("settings.securityAccess")} />
+        <SectionCard className="overflow-hidden shadow-soft">
           <button
             type="button"
             onClick={() => setIsPasswordModalOpen(true)}
-            className="flex w-full items-center justify-between gap-4 p-5 text-left transition hover:bg-[var(--color-bg-subtle)]/60"
+            className="flex w-full items-center justify-between gap-4 p-5 text-left transition hover:bg-bg-subtle/60"
           >
             <span className="flex items-center gap-4">
-              <span className="grid h-10 w-10 shrink-0 place-content-center rounded-full bg-[var(--color-bg-tint-soft)] text-[var(--color-primary)]">
+              <span className="grid h-10 w-10 shrink-0 place-content-center rounded-full bg-bg-tint-soft text-primary">
                 <Lock className="h-5 w-5" />
               </span>
               <span>
-                <span className="block text-base font-semibold text-[var(--color-text-primary)]">
-                  Change Password
+                <span className="block text-base font-semibold text-text-primary">
+                  {t("settings.changePassword")}
                 </span>
-                <span className="mt-0.5 block text-sm text-[var(--color-text-secondary)]">
-                  Update your account password regularly for security
+                <span className="mt-0.5 block text-sm text-text-secondary">
+                  {t("settings.changePasswordDesc", "Cập nhật mật khẩu thường xuyên để bảo mật")}
                 </span>
               </span>
             </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+            <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
           </button>
         </SectionCard>
       </section>
 
-      <div className="flex flex-col-reverse items-stretch justify-end gap-4 border-t border-[var(--color-border-light)] pt-8 sm:flex-row">
+      <div className="flex flex-col-reverse items-stretch justify-end gap-4 border-t border-border-light pt-8 sm:flex-row">
         <button
           type="button"
           onClick={handleDiscard}
-          className="rounded-[var(--radius-sm)] bg-[var(--color-bg-badge)] px-8 py-3 text-base font-semibold text-[var(--color-text-primary)] transition hover:opacity-90"
+          disabled={saving}
+          className="rounded-sm bg-bg-badge px-8 py-3 text-base font-semibold text-text-primary transition hover:opacity-90"
         >
-          Discard
+          {t("settings.discard", "Hủy")}
         </button>
-        <PrimaryButton type="button" onClick={handleSaveChanges} className="px-8 py-3 text-base">
-          Save Changes
+        <PrimaryButton type="button" onClick={handleSaveChanges} disabled={saving} className="px-8 py-3 text-base">
+          {saving ? t("common.loading", "Đang lưu...") : t("settings.saveChanges", "Lưu thay đổi")}
         </PrimaryButton>
       </div>
-      {saveMessage ? (
-        <p className="text-right text-sm font-semibold text-emerald-600">{saveMessage}</p>
-      ) : null}
 
       <ChangePasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
     </div>

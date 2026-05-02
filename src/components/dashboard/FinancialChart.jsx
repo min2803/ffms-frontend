@@ -53,22 +53,22 @@ export default function FinancialChart({
   }, [activeView, dataMap]);
 
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-soft)]">
+    <article className="rounded-md border border-border-default bg-bg-surface p-5 shadow-soft">
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{title}</p>
-          <p className="text-xs text-[var(--color-text-soft)]">{subtitle}</p>
+          <p className="text-lg font-bold text-text-primary">{title}</p>
+          <p className="text-xs text-text-soft">{subtitle}</p>
         </div>
-        <div className="flex rounded-[var(--radius-xs)] border border-[var(--color-border-default)] p-0.5 text-xs">
+        <div className="flex rounded-xs border border-border-default p-0.5 text-xs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => onViewChange(tab.id)}
               className={`rounded-md px-4 py-1.5 font-medium transition ${
                 activeView === tab.id
-                  ? "bg-[var(--color-primary)] text-[var(--color-text-inverse)] shadow-[var(--shadow-soft)]"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                  ? "bg-primary text-text-inverse shadow-soft"
+                  : "text-text-muted hover:text-text-secondary"
               }`}
             >
               {tab.label}

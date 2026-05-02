@@ -1,72 +1,90 @@
 import { useState, useEffect, useCallback } from "react";
 import budgetService from "../services/modules/budgetService";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
-/**
- * Hook quản lý ngân sách: lấy, thiết lập, cập nhật, xoá.
- *
- * Trả về: { budget, loading, error, refetch, setBudget, updateBudget, deleteBudget }
- */
-export default function useBudget(month) {
+export default function useBudget() {
   const [budget, setBudgetData] = useState(null);
+  const [hasNoBudget, setHasNoBudget] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(null);
+  const [currentYear, setCurrentYear] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Lấy ngân sách theo tháng ───────────────────────────────────────
-  const fetchBudget = useCallback(async () => {
+  const fetchCurrentBudget = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await budgetService.getBudget(month);
-      setBudgetData(data);
+      const response = await budgetService.getCurrentBudget();
+      const payload = response?.data?.data ?? response?.data ?? response;
+      setBudgetData(payload.budgets || []);
+      setHasNoBudget(!!payload.hasNoBudget);
+      setCurrentMonth(payload.month);
+      setCurrentYear(payload.year);
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [month]);
+  }, []);
+
+  const fetchHistory = useCallback(async (limit = 12, offset = 0) => {
+    try {
+      const response = await budgetService.getBudgetHistory(limit, offset);
+      const payload = response?.data?.data ?? response?.data ?? response;
+      setHistory(Array.isArray(payload) ? payload : []);
+    } catch (err) {
+      console.error("[useBudget] fetchHistory error:", getErrorMessage(err));
+    }
+  }, []);
 
   useEffect(() => {
-    fetchBudget();
-  }, [fetchBudget]);
+    fetchCurrentBudget();
+    fetchHistory();
+  }, [fetchCurrentBudget, fetchHistory]);
 
-  // ── Thiết lập ngân sách mới ────────────────────────────────────────
   const setBudget = useCallback(async (payload) => {
     try {
       await budgetService.setBudget(payload);
-      await fetchBudget();
+      await fetchCurrentBudget();
+      await fetchHistory();
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     }
-  }, [fetchBudget]);
+  }, [fetchCurrentBudget, fetchHistory]);
 
-  // ── Cập nhật ───────────────────────────────────────────────────────
   const updateBudget = useCallback(async (id, payload) => {
     try {
       await budgetService.updateBudget(id, payload);
-      await fetchBudget();
+      await fetchCurrentBudget();
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     }
-  }, [fetchBudget]);
+  }, [fetchCurrentBudget]);
 
-  // ── Xoá ────────────────────────────────────────────────────────────
   const deleteBudget = useCallback(async (id) => {
     try {
       await budgetService.deleteBudget(id);
-      await fetchBudget();
+      await fetchCurrentBudget();
+      await fetchHistory();
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     }
-  }, [fetchBudget]);
+  }, [fetchCurrentBudget, fetchHistory]);
 
   return {
     budget,
+    hasNoBudget,
+    currentMonth,
+    currentYear,
+    history,
     loading,
     error,
-    refetch: fetchBudget,
+    refetch: fetchCurrentBudget,
+    refetchHistory: fetchHistory,
     setBudget,
     updateBudget,
     deleteBudget,

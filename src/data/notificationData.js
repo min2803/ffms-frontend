@@ -12,7 +12,7 @@ export const notificationItems = [
     category: "alert",
     unread: true,
     icon: AlertTriangle,
-    iconTone: "bg-red-100 text-[var(--color-state-error)]",
+    iconTone: "bg-red-100 text-state-error",
   },
   {
     id: "n2",
@@ -22,7 +22,7 @@ export const notificationItems = [
     category: "warning",
     unread: true,
     icon: Bell,
-    iconTone: "bg-[var(--color-role-member-bg)] text-[var(--color-role-member-text)]",
+    iconTone: "bg-role-member-bg text-role-member-text",
   },
   {
     id: "n3",
@@ -32,7 +32,7 @@ export const notificationItems = [
     category: "info",
     unread: true,
     icon: Info,
-    iconTone: "bg-[#cfe5ff] text-[var(--color-primary)]",
+    iconTone: "bg-[#cfe5ff] text-primary",
   },
   {
     id: "n4",
@@ -42,6 +42,6 @@ export const notificationItems = [
     category: "member",
     unread: false,
     icon: UserPlus,
-    iconTone: "bg-[var(--color-role-viewer-bg)] text-[var(--color-text-secondary)]",
+    iconTone: "bg-role-viewer-bg text-text-secondary",
   },
 ];

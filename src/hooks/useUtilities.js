@@ -1,39 +1,37 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import utilityService from "../services/modules/utilityService";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
-/**
- * Hook quản lý tiện ích: mức tiêu thụ, tổng hợp, thêm chỉ số.
- *
- * Trả về: { consumption, summary, loading, error, refetch, addReading }
- */
 export default function useUtilities(params = {}) {
   const [consumption, setConsumption] = useState(null);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Lấy mức tiêu thụ ──────────────────────────────────────────────
+  const stableParams = useMemo(() => params, [params.type, params.month]);
+
   const fetchConsumption = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await utilityService.getConsumption(params);
-      setConsumption(data);
+      const response = await utilityService.getConsumption(stableParams);
+      const payload = response?.data ?? response;
+      setConsumption(payload);
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [JSON.stringify(params)]);
+  }, [stableParams]);
 
-  // ── Lấy tổng hợp theo tháng ───────────────────────────────────────
   const fetchSummary = useCallback(async (month) => {
     try {
-      const data = await utilityService.getSummary(month);
-      setSummary(data);
-      return data;
+      const response = await utilityService.getSummary(month);
+      const payload = response?.data ?? response;
+      setSummary(payload);
+      return payload;
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     }
   }, []);
@@ -42,13 +40,12 @@ export default function useUtilities(params = {}) {
     fetchConsumption();
   }, [fetchConsumption]);
 
-  // ── Thêm chỉ số mới ───────────────────────────────────────────────
   const addReading = useCallback(async (payload) => {
     try {
       await utilityService.addReading(payload);
       await fetchConsumption();
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     }
   }, [fetchConsumption]);

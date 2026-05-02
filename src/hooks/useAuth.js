@@ -1,17 +1,12 @@
 import { useState, useCallback } from "react";
 import authService from "../services/modules/authService";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
-/**
- * Hook quản lý xác thực: đăng nhập, đăng ký, lấy thông tin, đăng xuất.
- *
- * Trả về: { user, loading, error, login, register, getMe, logout }
- */
 export default function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ── Đăng nhập ──────────────────────────────────────────────────────
   const login = useCallback(async (data) => {
     setLoading(true);
     setError(null);
@@ -21,15 +16,13 @@ export default function useAuth() {
       setUser(userData);
       return response;
     } catch (err) {
-      const message = err?.response?.data?.message || err.message;
-      setError(message);
+      setError(getErrorMessage(err));
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // ── Đăng ký ────────────────────────────────────────────────────────
   const register = useCallback(async (data) => {
     setLoading(true);
     setError(null);
@@ -37,15 +30,13 @@ export default function useAuth() {
       const response = await authService.register(data);
       return response;
     } catch (err) {
-      const message = err?.response?.data?.message || err.message;
-      setError(message);
+      setError(getErrorMessage(err));
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // ── Lấy thông tin người dùng hiện tại ──────────────────────────────
   const getMe = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -54,15 +45,13 @@ export default function useAuth() {
       setUser(response?.data?.user || response?.data || response?.user || response);
       return response;
     } catch (err) {
-      const message = err?.response?.data?.message || err.message;
-      setError(message);
+      setError(getErrorMessage(err));
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // ── Đăng xuất ──────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     setLoading(true);
     try {

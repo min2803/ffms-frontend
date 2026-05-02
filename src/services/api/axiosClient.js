@@ -11,12 +11,10 @@ const axiosClient = axios.create({
 // ── Interceptor Yêu cầu ─────────────────────────────────────────────
 axiosClient.interceptors.request.use(
   (config) => {
-    // Đính kèm token xác thực nếu có trong localStorage
     const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => {
@@ -26,24 +24,71 @@ axiosClient.interceptors.request.use(
 );
 
 // ── Interceptor Phản hồi ────────────────────────────────────────────
+let isRefreshing = false;
+let failedQueue = [];
+
+function processQueue(error, token = null) {
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve(token);
+  });
+  failedQueue = [];
+}
+
 axiosClient.interceptors.response.use(
-  (response) => {
-    // Trả về trực tiếp response.data — component nhận dữ liệu sạch
-    return response.data;
-  },
-  (error) => {
-    const { response } = error;
+  (response) => response.data,
+  async (error) => {
+    const { response, config } = error;
 
     if (response) {
       const { status, data } = response;
 
+      if (status === 401 && !config._isRetry) {
+        const refreshToken = localStorage.getItem("refreshToken");
+
+        if (refreshToken) {
+          if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            }).then((token) => {
+              config.headers.Authorization = `Bearer ${token}`;
+              config._isRetry = true;
+              return axiosClient(config);
+            });
+          }
+
+          isRefreshing = true;
+          config._isRetry = true;
+
+          try {
+            const res = await axiosClient.post("/auth/refresh", { refreshToken });
+            // axiosClient interceptor đã unwrap response.data → res = { success, data: { accessToken, refreshToken } }
+            const newToken = res?.data?.accessToken;
+            if (newToken) {
+              localStorage.setItem("accessToken", newToken);
+              const newRefresh = res?.data?.refreshToken;
+              if (newRefresh) localStorage.setItem("refreshToken", newRefresh);
+              axiosClient.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+              processQueue(null, newToken);
+              config.headers.Authorization = `Bearer ${newToken}`;
+              return axiosClient(config);
+            }
+          } catch (refreshError) {
+            processQueue(refreshError, null);
+          } finally {
+            isRefreshing = false;
+          }
+        }
+
+        // Refresh thất bại hoặc không có refresh token — xóa và redirect
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userRole");
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
       switch (status) {
-        case 401:
-          console.warn("[401] Chưa xác thực — chuyển hướng đến trang đăng nhập.");
-          // Tuỳ chọn: xoá token và chuyển hướng
-          // localStorage.removeItem("accessToken");
-          // window.location.href = "/login";
-          break;
         case 403:
           console.warn("[403] Bị cấm — không đủ quyền truy cập.");
           break;

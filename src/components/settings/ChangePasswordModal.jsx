@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Lock, Key, Eye, EyeOff } from "lucide-react";
 import PrimaryButton from "../shared/PrimaryButton";
+import userService from "../../services/modules/userService";
 
 export default function ChangePasswordModal({ isOpen, onClose }) {
   const [showCurrent, setShowCurrent] = useState(false);
@@ -57,9 +58,17 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
     onClose();
   };
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
     if (!validatePasswordForm()) return;
-    handleClose();
+    try {
+      await userService.changePassword({
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword,
+      });
+      handleClose();
+    } catch (err) {
+      setErrors({ currentPassword: err?.response?.data?.message || "Failed to update password." });
+    }
   };
 
   if (!isOpen) return null;
@@ -67,10 +76,10 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#111c2d]/50 backdrop-blur-sm">
       <div
-        className="flex w-full max-w-md flex-col overflow-hidden rounded-[var(--radius-lg)] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="flex w-full max-w-md flex-col overflow-hidden rounded-lg bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header (Blue Background) */}
-        <div className="flex items-center justify-between bg-[var(--color-primary)] px-6 py-4 text-white">
+        <div className="flex items-center justify-between bg-primary px-6 py-4 text-white">
           <h2 className="text-base font-semibold">Change Password</h2>
           <button
             type="button"
@@ -85,21 +94,21 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
         <div className="space-y-5 p-6 pb-2">
           {/* Current Password */}
           <div>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-text-secondary">
               Current Password
             </label>
-            <div className="flex items-center justify-between rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20">
+            <div className="flex items-center justify-between rounded-sm bg-bg-subtle px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-primary/20">
               <div className="flex w-full items-center">
-                <Lock className="mr-2.5 h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+                <Lock className="mr-2.5 h-4 w-4 shrink-0 text-text-muted" />
                 <input
                   type={showCurrent ? "text" : "password"}
-                  className="w-full bg-transparent text-sm font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none"
+                  className="w-full bg-transparent text-sm font-medium text-text-primary placeholder-text-muted focus:outline-none"
                   placeholder="Enter current password"
                   value={form.currentPassword}
                   onChange={handleFieldChange("currentPassword")}
                 />
               </div>
-              <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition">
+              <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="text-text-muted hover:text-text-primary transition">
                 {showCurrent ? <EyeOff className="h-4 w-4 shrink-0" /> : <Eye className="h-4 w-4 shrink-0" />}
               </button>
             </div>
@@ -108,52 +117,52 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
             ) : null}
           </div>
 
-          <div className="h-px w-full bg-[var(--color-border-light)] my-2"></div>
+          <div className="h-px w-full bg-border-light my-2"></div>
 
           {/* New Password */}
           <div>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-text-secondary">
               New Password
             </label>
-            <div className="flex items-center justify-between rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20">
+            <div className="flex items-center justify-between rounded-sm bg-bg-subtle px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-primary/20">
               <div className="flex w-full items-center">
-                <Key className="mr-2.5 h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+                <Key className="mr-2.5 h-4 w-4 shrink-0 text-text-muted" />
                 <input
                   type={showNew ? "text" : "password"}
-                  className="w-full bg-transparent text-sm font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none"
+                  className="w-full bg-transparent text-sm font-medium text-text-primary placeholder-text-muted focus:outline-none"
                   placeholder="Enter new password"
                   value={form.newPassword}
                   onChange={handleFieldChange("newPassword")}
                 />
               </div>
-              <button type="button" onClick={() => setShowNew(!showNew)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition">
+              <button type="button" onClick={() => setShowNew(!showNew)} className="text-text-muted hover:text-text-primary transition">
                 {showNew ? <EyeOff className="h-4 w-4 shrink-0" /> : <Eye className="h-4 w-4 shrink-0" />}
               </button>
             </div>
             {errors.newPassword ? (
               <p className="mt-2 text-xs text-red-500">{errors.newPassword}</p>
             ) : (
-              <p className="mt-2 text-[10px] text-[var(--color-text-muted)]">Must be at least 8 characters long.</p>
+              <p className="mt-2 text-[10px] text-text-muted">Must be at least 8 characters long.</p>
             )}
           </div>
 
           {/* Confirm New Password */}
           <div>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-text-secondary">
               Confirm New Password
             </label>
-            <div className="flex items-center justify-between rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)] px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20">
+            <div className="flex items-center justify-between rounded-sm bg-bg-subtle px-3.5 py-3 transition-colors focus-within:ring-2 focus-within:ring-primary/20">
               <div className="flex w-full items-center">
-                <Key className="mr-2.5 h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+                <Key className="mr-2.5 h-4 w-4 shrink-0 text-text-muted" />
                 <input
                   type={showConfirm ? "text" : "password"}
-                  className="w-full bg-transparent text-sm font-medium text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none"
+                  className="w-full bg-transparent text-sm font-medium text-text-primary placeholder-text-muted focus:outline-none"
                   placeholder="Confirm new password"
                   value={form.confirmPassword}
                   onChange={handleFieldChange("confirmPassword")}
                 />
               </div>
-              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition">
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-text-muted hover:text-text-primary transition">
                 {showConfirm ? <EyeOff className="h-4 w-4 shrink-0" /> : <Eye className="h-4 w-4 shrink-0" />}
               </button>
             </div>
@@ -168,7 +177,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-[var(--radius-sm)] px-4 py-2 text-sm font-bold text-[var(--color-text-primary)] transition hover:bg-gray-100"
+            className="rounded-sm px-4 py-2 text-sm font-bold text-text-primary transition hover:bg-gray-100"
           >
             Cancel
           </button>

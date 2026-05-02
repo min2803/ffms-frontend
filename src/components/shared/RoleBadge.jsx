@@ -1,7 +1,7 @@
 const ROLE_STYLES = {
-  ADMIN: "bg-[var(--color-role-admin-bg)] text-[var(--color-role-admin-text)]",
-  EDITOR: "bg-[var(--color-role-editor-bg)] text-[var(--color-role-editor-text)]",
-  VIEWER: "bg-[var(--color-role-viewer-bg)] text-[var(--color-role-viewer-text)]",
+  ADMIN: "bg-role-admin-bg text-role-admin-text",
+  EDITOR: "bg-role-editor-bg text-role-editor-text",
+  VIEWER: "bg-role-viewer-bg text-role-viewer-text",
 };
 
 export default function RoleBadge({ role }) {

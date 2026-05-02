@@ -1,84 +1,70 @@
 import { useState, useEffect, useCallback } from "react";
 import userService from "../services/modules/userService";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
-/**
- * Hook tuỳ chỉnh đóng gói toàn bộ logic API liên quan đến người dùng.
- *
- * Trả về: { users, loading, error, refetch, createUser, updateUser, deleteUser }
- */
 export default function useUsers() {
   const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Lấy danh sách người dùng ───────────────────────────────────────
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (params = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await userService.getAllUsers();
-      // Tuỳ chỉnh theo cấu trúc API: data có thể là mảng hoặc { data: [...] }
-      setUsers(Array.isArray(data) ? data : data.data ?? []);
+      const data = await userService.getAdminUsers({
+        search: params.search ?? search,
+        page: params.page ?? pagination.page,
+        limit: params.limit ?? pagination.limit,
+      });
+      const payload = data?.data ?? data;
+      setUsers(payload?.users ?? (Array.isArray(payload) ? payload : []));
+      if (payload?.pagination) setPagination(payload.pagination);
     } catch (err) {
-      setError(err?.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [search, pagination.page, pagination.limit]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // ── Tạo mới ────────────────────────────────────────────────────────
-  const createUser = useCallback(
-    async (payload) => {
-      try {
-        await userService.createUser(payload);
-        await fetchUsers(); // làm mới danh sách
-      } catch (err) {
-        setError(err?.response?.data?.message || err.message);
-        throw err; // cho phép caller xử lý thêm
-      }
-    },
-    [fetchUsers]
-  );
+  const searchUsers = useCallback((term) => {
+    setSearch(term);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, []);
 
-  // ── Cập nhật ───────────────────────────────────────────────────────
-  const updateUser = useCallback(
-    async (id, payload) => {
-      try {
-        await userService.updateUser(id, payload);
-        await fetchUsers();
-      } catch (err) {
-        setError(err?.response?.data?.message || err.message);
-        throw err;
-      }
-    },
-    [fetchUsers]
-  );
+  const deleteUser = useCallback(async (id) => {
+    try {
+      await userService.adminDeleteUser(id);
+      await fetchUsers();
+    } catch (err) {
+      setError(getErrorMessage(err));
+      throw err;
+    }
+  }, [fetchUsers]);
 
-  // ── Xoá ────────────────────────────────────────────────────────────
-  const deleteUser = useCallback(
-    async (id) => {
-      try {
-        await userService.deleteUser(id);
-        await fetchUsers();
-      } catch (err) {
-        setError(err?.response?.data?.message || err.message);
-        throw err;
-      }
-    },
-    [fetchUsers]
-  );
+  const updateRole = useCallback(async (id, role_id) => {
+    try {
+      await userService.adminUpdateRole(id, role_id);
+      await fetchUsers();
+    } catch (err) {
+      setError(getErrorMessage(err));
+      throw err;
+    }
+  }, [fetchUsers]);
 
   return {
     users,
+    pagination,
     loading,
     error,
     refetch: fetchUsers,
-    createUser,
-    updateUser,
+    searchUsers,
     deleteUser,
+    updateRole,
   };
 }

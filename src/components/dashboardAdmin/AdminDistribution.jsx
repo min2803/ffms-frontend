@@ -38,7 +38,7 @@ export default function AdminDistribution({ categories }) {
 
       <button
         type="button"
-        className="mt-5 text-xs font-semibold text-primary hover:text-primary-dark transition"
+        className="mt-5 text-xs font-semibold text-primary hover:opacity-80 transition"
       >
         View Detailed Breakdown
       </button>

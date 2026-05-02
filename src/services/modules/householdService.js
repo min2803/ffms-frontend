@@ -56,19 +56,28 @@ const householdService = {
   },
 
   /**
-   * POST /household/invite
+   * POST /households/invite
    * Mời thành viên tham gia hộ gia đình.
    */
   inviteMember(data) {
-    return axiosClient.post("/household/invite", data);
+    return axiosClient.post("/households/invite", data);
   },
 
   /**
-   * PATCH /household/members/:id/role
+   * PATCH /households/members/:id/role
    * Thay đổi vai trò của thành viên trong hộ gia đình.
    */
   changeRole(id, data) {
-    return axiosClient.patch(`/household/members/${id}/role`, data);
+    return axiosClient.patch(`/households/members/${id}/role`, data);
+  },
+
+  /**
+   * POST /households/seed-data
+   * Tạo dữ liệu mẫu (income/expense/budget) cho household hiện tại.
+   * Dùng cho user cũ chưa có dữ liệu.
+   */
+  seedData() {
+    return axiosClient.post("/households/seed-data");
   },
 };
 

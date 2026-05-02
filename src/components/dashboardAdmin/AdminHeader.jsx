@@ -1,20 +1,16 @@
-import { Calendar, RefreshCw } from "lucide-react";
+import { Calendar, DollarSign, RefreshCw } from "lucide-react";
+import { useAppContext } from "../../contexts/AppContext";
+import FlagIcon from "../ui/FlagIcon";
 
-/**
- * Admin dashboard header with title, subtitle, time filter and refresh.
- *
- * @param {Object} props
- * @param {string} props.title    – main heading
- * @param {string} props.subtitle – subheading text
- */
 export default function AdminHeader({
   title = "System Overview",
   subtitle = "Real-time financial performance and health metrics.",
   actions,
 }) {
+  const { language, currency, toggleLanguage, toggleCurrency } = useAppContext();
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      {/* Title */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">
           {title}
@@ -22,16 +18,35 @@ export default function AdminHeader({
         <p className="mt-0.5 text-sm text-text-muted">{subtitle}</p>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleLanguage}
+          className="grid h-10 w-10 place-content-center rounded-full transition hover:bg-bg-subtle"
+          title={language === "en" ? "Switch to Vietnamese" : "Chuyển sang Tiếng Anh"}
+        >
+          <FlagIcon lang={language} />
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleCurrency}
+          className="inline-flex h-10 items-center gap-1 rounded-full px-2 transition hover:bg-bg-subtle"
+          title={currency === "VND" ? "Switch to USD" : "Chuyển sang VND"}
+        >
+          <DollarSign size={16} className="text-primary" />
+          <span className="text-xs font-bold text-primary">
+            {currency === "VND" ? "VND" : "USD"}
+          </span>
+        </button>
+
         {actions !== undefined ? (
           actions
         ) : (
           <>
-            {/* Time range picker */}
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-radius-sm border border-border-default bg-bg-surface px-3.5 py-2 text-xs font-semibold text-text-secondary shadow-soft transition hover:bg-bg-subtle"
+              className="inline-flex items-center gap-2 rounded-sm border border-border-default bg-bg-surface px-3.5 py-2 text-xs font-semibold text-text-secondary shadow-soft transition hover:bg-bg-subtle"
             >
               <Calendar size={14} />
               <span>Last 24 Hours</span>
@@ -52,10 +67,9 @@ export default function AdminHeader({
               </svg>
             </button>
 
-            {/* Refresh */}
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-radius-sm border border-border-default bg-bg-surface px-3.5 py-2 text-xs font-semibold text-text-secondary shadow-soft transition hover:bg-bg-subtle"
+              className="inline-flex items-center gap-1.5 rounded-sm border border-border-default bg-bg-surface px-3.5 py-2 text-xs font-semibold text-text-secondary shadow-soft transition hover:bg-bg-subtle"
             >
               <RefreshCw size={14} />
               <span>Refresh Data</span>

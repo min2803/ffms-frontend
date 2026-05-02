@@ -7,7 +7,7 @@ export default function PrimaryButton({
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-2)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text-inverse)] shadow-[var(--shadow-button-sm)] transition hover:opacity-95 ${className}`}
+      className={`inline-flex items-center justify-center rounded-sm bg-gradient-to-br from-primary to-primary-2 px-4 py-2.5 text-sm font-semibold text-text-inverse shadow-button-sm transition hover:opacity-95 ${className}`}
       {...props}
     >
       {children}
