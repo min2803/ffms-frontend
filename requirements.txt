@@ -3,3 +3,7 @@ npm install react-router-dom
 npm install lucide-react
 npm install swiper
 npm install axios
+npm install clsx tailwind-merge
+npm install flag-icons
+npm install -D prettier prettier-plugin-tailwindcss
+npm run build 2>&1

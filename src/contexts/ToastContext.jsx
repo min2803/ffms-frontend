@@ -1,0 +1,47 @@
+import { createContext, useCallback, useContext, useState } from "react";
+
+const ToastContext = createContext(null);
+
+let toastId = 0;
+
+/**
+ * Toast Provider – quản lý danh sách toast notifications toàn cục.
+ *
+ * Mỗi toast: { id, type, message, duration }
+ *   type: "success" | "error" | "warning" | "info"
+ */
+export function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback(({ type = "info", message, duration = 3500 }) => {
+    const id = ++toastId;
+    setToasts((prev) => [...prev, { id, type, message, duration }]);
+
+    // Auto-dismiss
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
+
+    return id;
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // Convenience helpers
+  const success = useCallback((message, duration) => addToast({ type: "success", message, duration }), [addToast]);
+  const error = useCallback((message, duration) => addToast({ type: "error", message, duration }), [addToast]);
+  const warning = useCallback((message, duration) => addToast({ type: "warning", message, duration }), [addToast]);
+  const info = useCallback((message, duration) => addToast({ type: "info", message, duration }), [addToast]);
+
+  const value = { toasts, addToast, removeToast, success, error, warning, info };
+
+  return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;
+}
+
+export function useToast() {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error("useToast must be used within ToastProvider");
+  return ctx;
+}
